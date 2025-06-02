@@ -1,0 +1,57 @@
+
+#ESTRUTURA DA PROJETO - CLINICA MED PLUS
+
+medplus-api/
+├── pom.xml
+├── Dockerfile
+├── docker-compose.yml
+└── src/
+    └── main/
+        ├── java/
+        │   └── com/
+        │       └── medplus/
+        │           ├── MedplusApplication.java
+        │           ├── config/           // Configurações (Segurança, CORS, etc.)
+        │           ├── controller/       // Controladores REST (Endpoints da API)
+        │           │   ├── AuthController.java
+        │           │   ├── PacienteController.java
+        │           │   ├── MedicoController.java
+        │           │   ├── AdministradorController.java
+        │           │   └── ConsultaController.java
+        │           ├── dto/              // Data Transfer Objects (para entrada e saída de dados)
+        │           │   ├── UsuarioDTO.java
+        │           │   ├── PacienteDTO.java
+        │           │   ├── MedicoDTO.java
+        │           │   ├── EnderecoDTO.java
+        │           │   ├── ConsultaDTO.java
+        │           │   ├── LoginDTO.java
+        │           │   └── TokenDTO.java
+        │           ├── enums/            // Enumerações (TipoConsulta, StatusConsulta, PerfilUsuario)
+        │           ├── exception/        // Classes de exceção personalizadas e handlers
+        │           ├── model/            // Entidades JPA (Mapeamento do banco de dados)
+        │           │   ├── Usuario.java
+        │           │   ├── Paciente.java
+        │           │   ├── Medico.java
+        │           │   ├── Endereco.java
+        │           │   ├── Especialidade.java
+        │           │   ├── Disponibilidade.java
+        │           │   └── Consulta.java
+        │           ├── repository/       // Interfaces Spring Data JPA (Acesso aos dados)
+        │           │   ├── UsuarioRepository.java
+        │           │   ├── PacienteRepository.java
+        │           │   ├── MedicoRepository.java
+        │           │   ├── EspecialidadeRepository.java
+        │           │   └── ConsultaRepository.java
+        │           └── service/          // Lógica de negócios
+        │               ├── AuthService.java
+        │               ├── PacienteService.java
+        │               ├── MedicoService.java
+        │               ├── AdministradorService.java
+        │               └── ConsultaService.java
+        └── resources/
+            ├── application.properties  // Configurações da aplicação (banco de dados, servidor, etc.)
+            └── db/
+                └── migration/        // Scripts de migração de banco (Flyway ou Liquibase - opcional)
+
+
+

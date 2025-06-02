@@ -1,0 +1,81 @@
+
+
+medplus-api/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── br/
+│   │   │       └── com/
+│   │   │           └── medplus/
+│   │   │               ├── MedplusApplication.java
+│   │   │
+│   │   │               ├── config/
+│   │   │               │   ├── ApplicationConfiguration.java
+│   │   │               │   └── SecurityConfiguration.java
+│   │   │
+│   │   │               ├── controller/
+│   │   │               │   ├── AuthController.java
+│   │   │               │   ├── PacienteController.java
+│   │   │               │   ├── MedicoController.java
+│   │   │               │   └── AdminController.java
+│   │   │
+│   │   │               ├── dto/
+│   │   │               │   ├── AuthRequest.java
+│   │   │               │   ├── PacienteRequest.java
+│   │   │               │   ├── MedicoRequest.java
+│   │   │               │   ├── AdminRequest.java
+│   │   │               │   └── EnderecoRequest.java  <-- Novo DTO (opcional)
+│   │   │
+│   │   │               ├── model/
+│   │   │               │   ├── acesso/
+│   │   │               │   │   ├── Usuario.java
+│   │   │               │   │   ├── Perfil.java
+│   │   │               │   │   └── PerfilEnum.java
+│   │   │               │   │
+│   │   │               │   ├── paciente/
+│   │   │               │   │   └── Paciente.java
+│   │   │               │   │
+│   │   │               │   ├── medico/
+│   │   │               │   │   └── Medico.java
+│   │   │               │   │
+│   │   │               │   ├── admin/
+│   │   │               │   │   └── Admin.java
+│   │   │               │   │
+│   │   │               │   └── common/
+│   │   │               │       └── Endereco.java   <-- Nova classe Endereco
+│   │   │
+│   │   │               ├── repository/
+│   │   │               │   ├── UsuarioRepository.java
+│   │   │               │   ├── PacienteRepository.java
+│   │   │               │   ├── MedicoRepository.java
+│   │   │               │   └── AdminRepository.java
+│   │   │
+│   │   │               ├── service/
+│   │   │               │   ├── AuthService.java
+│   │   │               │   ├── PacienteService.java
+│   │   │               │   ├── MedicoService.java
+│   │   │               │   ├── AdminService.java
+│   │   │               │   ├── UsuarioService.java
+│   │   │               │   └── EmailService.java
+│   │   │
+│   │   │               ├── security/
+│   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │               │   └── JwtService.java
+│   │   │
+│   │   │               ├── util/
+│   │   │               │   ├── entity/
+│   │   │               │   │   ├── EntidadeAuditavel.java
+│   │   │               │   │   └── EntidadeNegocio.java
+│   │   │               │   ├── exception/
+│   │   │               │   │   └── EntidadeNaoEncontradaException.java
+│   │   │               │   └── TratadoErros.java
+│   │   │
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── db/migration/
+│   │       ├── static/
+│   │       └── templates/
+│
+├── pom.xml
+├── Dockerfile
+└── docker-compose.yml
