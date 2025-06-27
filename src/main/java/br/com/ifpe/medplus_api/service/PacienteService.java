@@ -1,3 +1,5 @@
+
+
 package br.com.ifpe.medplus_api.service;
 
 import br.com.ifpe.medplus_api.dto.EnderecoRequest;
@@ -26,7 +28,7 @@ import java.util.Set;
 public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
-    private final UsuarioRepository usuarioRepository; // Para verificar duplicidade de email/cpf em todos os usuários
+    private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -53,40 +55,41 @@ public class PacienteService {
      * @throws EntidadeNaoEncontradaException Se o perfil de paciente não for encontrado.
      */
     @Transactional
-    public Paciente registrarPaciente(PacienteRequest request) {
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new EntityExistsException("Email já cadastrado no sistema: " + request.getEmail());
-        }
-        if (usuarioRepository.existsByCpf(request.getCpf())) {
-            throw new EntityExistsException("CPF já cadastrado no sistema: " + request.getCpf());
-        }
+public Paciente registrarPaciente(PacienteRequest request) {
+    if (usuarioRepository.existsByEmail(request.getEmail())) {
+        throw new EntityExistsException("Email já cadastrado no sistema: " + request.getEmail());
+    }
+    if (usuarioRepository.existsByCpf(request.getCpf())) {
+        throw new EntityExistsException("CPF já cadastrado no sistema: " + request.getCpf());
+    }
 
-        Paciente paciente = new Paciente();
-        paciente.setNome(request.getNome());
-        paciente.setEmail(request.getEmail());
-        paciente.setSenha(passwordEncoder.encode(request.getSenha()));
-        paciente.setCpf(request.getCpf());
-        paciente.setDataNascimento(request.getDataNascimento());
-        paciente.setTelefone(request.getTelefone());
-        paciente.setHistoricoMedico(request.getHistoricoMedico());
-        paciente.setAtivo(true);
+    Paciente paciente = new Paciente();
+    paciente.setNome(request.getNome());
+    paciente.setEmail(request.getEmail());
+    paciente.setSenha(passwordEncoder.encode(request.getSenha()));
+    paciente.setCpf(request.getCpf());
+    paciente.setDataNascimento(request.getDataNascimento());
+    paciente.setTelefone(request.getTelefone());
+    paciente.setHistoricoMedico(request.getHistoricoMedico());
+    paciente.setAtivo(true);
 
-        if (request.getEndereco() != null) {
-            EnderecoRequest endReq = request.getEndereco();
-            Endereco endereco = new Endereco(endReq.getLogradouro(), endReq.getNumero(), endReq.getComplemento(),
-                    endReq.getBairro(), endReq.getCidade(), endReq.getUf(), endReq.getCep());
-            paciente.setEndereco(endereco);
-        }
+    if (request.getEndereco() != null) {
+        EnderecoRequest endReq = request.getEndereco();
+        Endereco endereco = new Endereco(endReq.getLogradouro(), endReq.getNumero(), endReq.getComplemento(),
+                endReq.getBairro(), endReq.getCidade(), endReq.getUf(), endReq.getCep());
+        paciente.setEndereco(endereco);
+    }
 
-        Perfil perfilPaciente = perfilRepository.findByNome(PerfilEnum.ROLE_PACIENTE)
-                .orElseThrow(() -> new EntidadeNaoEncontradaException("Perfil 'PACIENTE' não encontrado."));
-        Set<Perfil> perfis = new HashSet<>();
-        perfis.add(perfilPaciente);
-        paciente.setPerfis(perfis);
+    Perfil perfilPaciente = perfilRepository.findByNome(PerfilEnum.ROLE_PACIENTE)
+            .orElseThrow(() -> new EntidadeNaoEncontradaException("Perfil 'PACIENTE' não encontrado."));
+    Set<Perfil> perfis = new HashSet<>();
+    perfis.add(perfilPaciente);
+    
+    // --- CORREÇÃO APLICADA AQUI ---
+    paciente.setPerfis(perfis); 
 
         Paciente pacienteSalvo = pacienteRepository.save(paciente);
-        
-        // Enviar email de boas-vindas (opcional e assíncrono)
+    
         emailService.sendWelcomeEmail(pacienteSalvo.getNome(), pacienteSalvo.getEmail());
 
         return pacienteSalvo;
@@ -117,7 +120,6 @@ public class PacienteService {
         return pacienteRepository.findByEmail(email)
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Paciente não encontrado com email: " + email));
     }
-
 
     /**
      * Lista todos os pacientes.
@@ -153,8 +155,6 @@ public class PacienteService {
 
         paciente.setNome(request.getNome());
         paciente.setEmail(request.getEmail());
-        // A senha só deve ser atualizada se fornecida e por um endpoint específico de mudança de senha.
-        // Não incluímos atualização de senha aqui para evitar mudanças acidentais.
         paciente.setCpf(request.getCpf());
         paciente.setDataNascimento(request.getDataNascimento());
         paciente.setTelefone(request.getTelefone());
@@ -173,8 +173,7 @@ public class PacienteService {
     }
 
     /**
-     * Exclui (desativa) um paciente.
-     * A exclusão lógica é geralmente preferível à física.
+     * Desativa um paciente (exclusão lógica).
      *
      * @param id O ID do paciente a ser desativado.
      * @throws EntidadeNaoEncontradaException Se o paciente não for encontrado.
@@ -187,9 +186,22 @@ public class PacienteService {
         pacienteRepository.save(paciente);
     }
     
+    // MÉTODO ADICIONADO PARA CORRIGIR A FUNCIONALIDADE DO ADMINCONTROLLER
+    /**
+     * Ativa um paciente previamente desativado.
+     *
+     * @param id O ID do paciente a ser ativado.
+     * @throws EntidadeNaoEncontradaException Se o paciente não for encontrado.
+     */
+    @Transactional
+    public void ativarPaciente(Long id) {
+        Paciente paciente = buscarPorId(id);
+        paciente.setAtivo(true);
+        pacienteRepository.save(paciente);
+    }
+    
     /**
      * Exclui fisicamente um paciente (USAR COM CUIDADO).
-     * Geralmente, a desativação (exclusão lógica) é preferível.
      *
      * @param id O ID do paciente a ser excluído.
      * @throws EntidadeNaoEncontradaException Se o paciente não for encontrado.
@@ -199,12 +211,10 @@ public class PacienteService {
         if (!pacienteRepository.existsById(id)) {
             throw new EntidadeNaoEncontradaException("Paciente não encontrado com ID: " + id + " para exclusão.");
         }
-        // Adicionar lógica para tratar dependências (consultas, etc.) antes de excluir.
-        // Por exemplo, anonimizar dados ou impedir a exclusão se houver registros importantes.
         pacienteRepository.deleteById(id);
     }
-
-    // Outros métodos como mudar senha, recuperar senha seriam implementados
-    // de forma similar ao AuthService, mas específicos para o contexto do paciente.
 }
+
+
+// Fim do código
 

@@ -83,4 +83,8 @@ public class Medico extends Usuario {
                 ", especialidade='" + especialidade + '\'' +
                 '}';
     }
+
+    public Usuario getUsuario() {
+        throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
+    }
 }

@@ -57,4 +57,8 @@ public class Paciente extends Usuario {
                 ", historicoMedico='" + (historicoMedico != null ? historicoMedico.substring(0, Math.min(historicoMedico.length(), 50)) + "..." : "N/A") + '\'' +
                 '}';
     }
+
+    public Usuario getUsuario() {
+        throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
+    }
 }

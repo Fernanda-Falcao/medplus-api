@@ -1,3 +1,4 @@
+
 package br.com.ifpe.medplus_api.util.exception;
 
 import org.springframework.http.HttpStatus;

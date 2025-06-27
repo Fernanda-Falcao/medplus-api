@@ -33,9 +33,9 @@ public class SecurityConfiguration {
     private final AuthenticationProvider authenticationProvider; // Injetado do ApplicationConfiguration
 
     private static final String[] PUBLIC_URLS = {
-        "/api/v1/auth/**",
-        "/api/v1/pacientes/registrar",
-        "/api/v1/auth/registrar/paciente"
+        "/auth/**",
+        "/pacientes/registrar",
+        "/auth/registrar/paciente"
     };
 
     @Bean
@@ -45,9 +45,9 @@ public class SecurityConfiguration {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(PUBLIC_URLS).permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole(PerfilEnum.ROLE_ADMIN.getNome()) // Verifique se getNome() retorna "ADMIN"
-                .requestMatchers("/api/v1/medicos/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_MEDICO.getNome(), PerfilEnum.ROLE_ADMIN.getNome())
-                .requestMatchers("/api/v1/pacientes/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_PACIENTE.getNome(), PerfilEnum.ROLE_ADMIN.getNome())
+                .requestMatchers("/admin/**").hasRole(PerfilEnum.ROLE_ADMIN.getNome()) // Verifique se getNome() retorna "ADMIN"
+                .requestMatchers("/medicos/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_MEDICO.getNome(), PerfilEnum.ROLE_ADMIN.getNome())
+                .requestMatchers("/pacientes/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_PACIENTE.getNome(), PerfilEnum.ROLE_ADMIN.getNome())
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

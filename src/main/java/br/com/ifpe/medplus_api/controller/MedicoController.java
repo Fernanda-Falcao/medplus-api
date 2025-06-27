@@ -1,6 +1,6 @@
 package br.com.ifpe.medplus_api.controller;
 
-import br.com.ifpe.medplus_api.dto.DisponibilidadeRequest; // Será criado
+import br.com.ifpe.medplus_api.dto.DisponibilidadeRequest;
 import br.com.ifpe.medplus_api.dto.MedicoRequest;
 import br.com.ifpe.medplus_api.dto.SenhaUpdateRequest;
 import br.com.ifpe.medplus_api.model.consulta.Consulta;
@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityExistsException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -26,8 +27,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap; // Import necessário para o HashMap
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,7 +50,6 @@ public class MedicoController {
     private final DisponibilidadeMedicoService disponibilidadeMedicoService;
     private final AuthService authService;
 
-    
     public MedicoController(MedicoService medicoService,
                             ConsultaService consultaService,
                             DisponibilidadeMedicoService disponibilidadeMedicoService,
@@ -57,26 +60,24 @@ public class MedicoController {
         this.authService = authService;
     }
 
-    /**
-     * DTO para resposta de Médico (sem a senha).
-     */
+    // =================================================================================
+    // == CORREÇÃO: Implementação dos DTOs de Resposta (Records)
+    // =================================================================================
+
     private record MedicoResponse(Long id, String nome, String email, String cpf, String crm, String especialidade, String telefone) {
         static MedicoResponse fromMedico(Medico medico) {
             return new MedicoResponse(
-                    medico.getId(),
-                    medico.getNome(),
-                    medico.getEmail(),
-                    medico.getCpf(),
-                    medico.getCrm(),
-                    medico.getEspecialidade(),
-                    medico.getTelefone()
+                medico.getId(),
+                medico.getNome(),
+                medico.getEmail(),
+                medico.getCpf(),
+                medico.getCrm(),
+                medico.getEspecialidade(),
+                medico.getTelefone()
             );
         }
     }
 
-    /**
-     * DTO para resposta de Consulta (visão do médico).
-     */
     private record ConsultaMedicoResponse(Long id, String pacienteNome, String dataHora, String status, String observacoes) {
         static ConsultaMedicoResponse fromConsulta(Consulta consulta) {
             return new ConsultaMedicoResponse(
@@ -88,10 +89,7 @@ public class MedicoController {
             );
         }
     }
-    
-    /**
-     * DTO para resposta de DisponibilidadeMedico.
-     */
+
     private record DisponibilidadeResponse(Long id, String diaSemana, String horaInicio, String horaFim, boolean ativo) {
         static DisponibilidadeResponse fromDisponibilidade(DisponibilidadeMedico d) {
             return new DisponibilidadeResponse(
@@ -104,7 +102,54 @@ public class MedicoController {
         }
     }
 
+    @Operation(summary = "Dashboard do médico", description = "Retorna resumo do dashboard do médico logado")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Dados do dashboard retornados"),
+        @ApiResponse(responseCode = "401", description = "Não autorizado"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado"),
+        @ApiResponse(responseCode = "404", description = "Médico não encontrado")
+    })
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('MEDICO')")
+    public ResponseEntity<?> getDashboardMedico(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            Medico medico = medicoService.buscarPorEmail(email);
+            Long medicoId = medico.getId();
 
+            LocalDate hoje = LocalDate.now();
+            List<Consulta> consultasHoje = consultaService.listarConsultasPorMedicoEData(medicoId, hoje);
+            long pacientesDoDia = consultasHoje.stream().map(Consulta::getPaciente).distinct().count();
+
+            LocalDateTime agora = LocalDateTime.now();
+            List<Consulta> proximasConsultas = consultaService.listarProximasConsultasPorMedico(medicoId, agora, 5);
+
+            List<Map<String, Object>> proximasConsultasDTO = proximasConsultas.stream().map(c -> {
+                Map<String, Object> consultaMap = new HashMap<>();
+                consultaMap.put("id", c.getId());
+                consultaMap.put("pacienteNome", c.getPaciente() != null ? c.getPaciente().getNome() : "N/A");
+                consultaMap.put("dataHora", c.getDataHoraConsulta().toString());
+                consultaMap.put("status", c.getStatus() != null ? c.getStatus().getDescricao() : "N/A");
+                return consultaMap;
+            }).collect(Collectors.toList());
+            
+            // CORREÇÃO: Usando HashMap para evitar o erro de compilação com Map.of()
+            Map<String, Object> dashboard = new HashMap<>();
+            dashboard.put("consultasHoje", consultasHoje.size());
+            dashboard.put("pacientesDoDia", pacientesDoDia);
+            dashboard.put("proximasConsultas", proximasConsultasDTO);
+
+            return ResponseEntity.ok(dashboard);
+
+        } catch (UsernameNotFoundException | EntidadeNaoEncontradaException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Médico não encontrado."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Ocorreu um erro inesperado no servidor."));
+        }
+    }
+    
+    // =================================================================================
+    // == ENDPOINTS DE PERFIL E AUTENTICAÇÃO DO MÉDICO
     @Operation(summary = "Obter perfil do médico logado", description = "Retorna os dados do perfil do médico autenticado.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil do médico retornado", content = @Content(schema = @Schema(implementation = MedicoResponse.class))),
@@ -131,6 +176,7 @@ public class MedicoController {
             @ApiResponse(responseCode = "404", description = "Médico não encontrado"),
             @ApiResponse(responseCode = "409", description = "Email, CPF ou CRM já em uso por outro usuário/médico")
     })
+
     @PutMapping("/meu-perfil")
     @PreAuthorize("hasRole('MEDICO')")
     public ResponseEntity<?> atualizarMeuPerfil(@Valid @RequestBody MedicoRequest medicoRequest, Authentication authentication) {
@@ -151,6 +197,7 @@ public class MedicoController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos (ex: senha antiga incorreta, nova senha não atende critérios)"),
             @ApiResponse(responseCode = "401", description = "Não autorizado")
     })
+
     @PostMapping("/meu-perfil/mudar-senha")
     @PreAuthorize("hasRole('MEDICO')")
     public ResponseEntity<?> mudarMinhaSenha(@Valid @RequestBody SenhaUpdateRequest senhaUpdateRequest, Authentication authentication) {
@@ -159,6 +206,26 @@ public class MedicoController {
             return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso."));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Cadastrar novo médico", description = "Permite que um administrador cadastre um médico no sistema.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Médico cadastrado com sucesso", content = @Content(schema = @Schema(implementation = MedicoResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Dados inválidos ou conflito de dados"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> cadastrarMedico(@Valid @RequestBody MedicoRequest medicoRequest) {
+        try {
+            Medico novoMedico = medicoService.registrarMedico(medicoRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(MedicoResponse.fromMedico(novoMedico));
+        } catch (EntityExistsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (EntidadeNaoEncontradaException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -197,7 +264,7 @@ public class MedicoController {
             String email = authentication.getName();
             Medico medico = medicoService.buscarPorEmail(email);
             List<Consulta> consultas = consultaService.listarConsultasPorMedico(medico.getId());
-            List<ConsultaMedicoResponse> response = consultas.stream().map(ConsultaMedicoResponse::fromConsulta).collect(Collectors.toList());
+            List<Object> response = consultas.stream().map(ConsultaMedicoResponse::fromConsulta).collect(Collectors.toList());
             return ResponseEntity.ok(response);
         } catch (UsernameNotFoundException | EntidadeNaoEncontradaException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Médico não encontrado."));
@@ -279,7 +346,7 @@ public class MedicoController {
             String emailMedico = authentication.getName();
             Medico medico = medicoService.buscarPorEmail(emailMedico);
             List<DisponibilidadeMedico> disponibilidades = disponibilidadeMedicoService.listarDisponibilidadesPorMedico(medico.getId());
-            List<DisponibilidadeResponse> response = disponibilidades.stream()
+            List<Object> response = disponibilidades.stream()
                                                                   .map(DisponibilidadeResponse::fromDisponibilidade)
                                                                   .collect(Collectors.toList());
             return ResponseEntity.ok(response);

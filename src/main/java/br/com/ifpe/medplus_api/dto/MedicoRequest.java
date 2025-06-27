@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class MedicoRequest {
     @PastOrPresent(message = "Data de nascimento deve ser no passado ou presente")
     private LocalDate dataNascimento;
 
+    @Pattern(regexp = "^\\+?\\d{8,20}$", message = "Telefone deve conter apenas números, com 8 a 20 dígitos, podendo iniciar com +")
     @Size(max = 20, message = "Telefone deve ter no máximo 20 caracteres")
     private String telefone;
 

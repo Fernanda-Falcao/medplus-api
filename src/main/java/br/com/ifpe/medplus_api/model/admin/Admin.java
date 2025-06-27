@@ -43,4 +43,8 @@ public class Admin extends Usuario {
                 ", nivelAcesso=" + nivelAcesso +
                 '}';
     }
+
+    public Usuario getUsuario() {
+        throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
+    }
 }

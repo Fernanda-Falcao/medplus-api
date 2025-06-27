@@ -1,3 +1,4 @@
+
 package br.com.ifpe.medplus_api.dto;
 
 import jakarta.validation.constraints.Email;
@@ -7,9 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO para requisições de autenticação (login).
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,9 +20,5 @@ public class AuthRequest {
 
     @NotBlank(message = "Senha é obrigatória.")
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres.")
-    // Em um cenário real, a validação do tamanho máximo da senha pode não ser necessária aqui,
-    // pois o backend irá compará-la com o hash armazenado.
     private String senha;
 }
-
-

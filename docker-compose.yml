@@ -1,4 +1,5 @@
 
+
 # docker-compose.yml
 version: "3.8"
 
@@ -10,7 +11,7 @@ services:
     environment:
       POSTGRES_USER: medplus
       POSTGRES_PASSWORD: medplus
-      POSTGRES_DB: medplusdb
+      POSTGRES_DB: medplus-api
       
     ports:
       - "5445:5432"
