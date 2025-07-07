@@ -55,7 +55,7 @@ public class PacienteService {
      * @throws EntidadeNaoEncontradaException Se o perfil de paciente não for encontrado.
      */
     @Transactional
-public Paciente registrarPaciente(PacienteRequest request) {
+public Paciente cadastrarPaciente(PacienteRequest request) {
     if (usuarioRepository.existsByEmail(request.getEmail())) {
         throw new EntityExistsException("Email já cadastrado no sistema: " + request.getEmail());
     }

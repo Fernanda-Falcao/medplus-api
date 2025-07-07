@@ -181,7 +181,7 @@ public class AdminController {
     
     @PostMapping("/usuarios/pacientes")
     public ResponseEntity<PacienteAdminResponse> criarPaciente(@Valid @RequestBody PacienteRequest pacienteRequest) {
-        Paciente novoPaciente = pacienteService.registrarPaciente(pacienteRequest);
+        Paciente novoPaciente = pacienteService.cadastrarPaciente(pacienteRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(PacienteAdminResponse.fromPaciente(novoPaciente));
     }
     

@@ -71,16 +71,16 @@ public class AuthController {
      * @param pacienteRequest DTO com os dados do paciente.
      * @return ResponseEntity com o paciente criado ou mensagem de erro.
      */
-    @Operation(summary = "Registrar novo paciente", description = "Cria uma nova conta de paciente.")
+    @Operation(summary = "Cadastrar novo paciente", description = "Cria uma nova conta de paciente.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Paciente registrado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados de requisição inválidos ou erro de validação"),
             @ApiResponse(responseCode = "409", description = "Email ou CPF já cadastrado")
     })
     @PostMapping("/registrar/paciente") // Endpoint público conforme SecurityConfig
-    public ResponseEntity<?> registrarPaciente(@Valid @RequestBody PacienteRequest pacienteRequest) {
+    public ResponseEntity<?> cadastrarPaciente(@Valid @RequestBody PacienteRequest pacienteRequest) {
         try {
-            Paciente novoPaciente = pacienteService.registrarPaciente(pacienteRequest);
+            Paciente novoPaciente = pacienteService.cadastrarPaciente(pacienteRequest);
             // Não retornar a senha no response
             // Poderia criar um PacienteResponseDTO se necessário
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

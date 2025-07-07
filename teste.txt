@@ -1,0 +1,119 @@
+Paciente
+
+{
+  "nome": "Fernanda Oliveira",
+  "email": "fernanda@email.com",
+  "senha": "123456",
+  "cpf": "12345678900",
+  "dataNascimento": "1995-08-25",
+  "telefone": "81999998888",
+  "historicoMedico": "Paciente com histórico de alergia a penicilina",
+  "endereco": {
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "bairro": "Centro",
+    "cidade": "Recife",
+    "estado": "PE",
+    "cep": "50000-000"
+  }
+}
+
+{
+  "nome": "Maria Silva",
+  "email": "maria.silva@example.com",
+  "password": "senha123",
+  "cpf": "12345678901",
+  "dataNascimento": "1990-05-15",
+  "telefone": "81991234567",
+  "historicoMedico": "Paciente com histórico de asma.",
+  "endereco": {
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "complemento": "Apto 201",
+    "bairro": "Centro",
+    "cidade": "Recife",
+    "uf": "PE",
+    "cep": "50000-000"
+  }
+}
+
+Cadastro de Medico 
+{
+  "nome": "Dra. Ana Beatriz",
+  "email": "ana.beatriz@medplus.com",
+  "senha": "senhaSegura123",
+  "cpf": "987.654.321-00",
+  "dataNascimento": "1985-11-20",
+  "telefone": "(81) 98888-1111",
+  "logradouro": "Av. Agamenon Magalhães",
+  "numero": "456",
+  "complemento": "Sala 12",
+  "bairro": "Ilha do Leite",
+  "cidade": "Recife",
+  "uf": "PE",
+  "cep": "52010-000",
+  "crm": "123456-PE",
+  "especialidade": "Cardiologia"
+}
+Cadastro de Administrador
+{
+  "nome": "Carlos Souza",
+  "email": "carlos@medplus.com",
+  "senha": "adminSenha",
+  "cpf": "321.654.987-00",
+  "dataNascimento": "1980-03-10",
+  "telefone": "(81) 99999-0000",
+  "logradouro": "Rua do Sol",
+  "numero": "789",
+  "complemento": "Bloco B",
+  "bairro": "Centro",
+  "cidade": "Jaboatão dos Guararapes",
+  "uf": "PE",
+  "cep": "54000-000",
+  "nivelAcesso": 1
+}
+
+
+Cadastro de Disponibilidade de Medico
+{
+  "diaSemana": "MONDAY",
+  "horaInicio": "08:00",
+  "horaFim": "12:00"
+}
+
+Agendamento de Consulta 
+
+{
+  "pacienteId": 1,
+  "medicoId": 2,
+  "dataHoraConsulta": "2025-07-10T09:00:00",
+  "observacoes": "Consulta de retorno"
+}
+
+
+JSON para um paciente
+{
+  "id": 15,
+  "nome": "Carlos Souza",
+  "email": "carlos@gmail.com",
+  "telefone": "81988888888",
+  "ativo": true,
+  "cpf": "123.456.789-00",
+  "crm": null,
+  "especialidade": null,
+  "roles": ["ROLE_PACIENTE"]
+}
+
+
+jSON para um médico
+{
+  "id": 7,
+  "nome": "Dra. Joana Silva",
+  "email": "joana@medplus.com",
+  "telefone": "81999999999",
+  "ativo": true,
+  "cpf": null,
+  "crm": "12345-PE",
+  "especialidade": "Cardiologia",
+  "roles": ["ROLE_MEDICO"]
+}

@@ -1,5 +1,6 @@
 package br.com.ifpe.medplus_api.dto;
 
+import br.com.ifpe.medplus_api.model.common.Endereco;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -8,7 +9,7 @@ import lombok.Data;
 /**
  * DTO para representar dados de endereço em requisições.
  */
-@Data // Lombok: gera getters, setters, toString, equals, hashCode, e construtor com campos obrigatórios.
+@Data
 public class EnderecoRequest {
 
     @NotBlank(message = "Logradouro é obrigatório")
@@ -37,4 +38,20 @@ public class EnderecoRequest {
     @NotBlank(message = "CEP é obrigatório")
     @Pattern(regexp = "\\d{5}-\\d{3}", message = "CEP deve estar no formato XXXXX-XXX")
     private String cep;
+
+    /**
+     * Converte este DTO para a classe embutida Endereco.
+     */
+    public Endereco toEndereco() {
+        return new Endereco(
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            uf,
+            cep
+        );
+    }
 }
+

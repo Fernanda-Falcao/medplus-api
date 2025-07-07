@@ -61,4 +61,9 @@ public class Paciente extends Usuario {
     public Usuario getUsuario() {
         throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
     }
+
+    public static Object builder() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'builder'");
+    }
 }

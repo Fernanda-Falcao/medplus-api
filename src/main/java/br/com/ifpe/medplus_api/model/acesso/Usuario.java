@@ -19,9 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Entidade base para todos os usuários do sistema (Paciente, Médico, Admin).
- * Implementa UserDetails para integração com o Spring Security.
- * Utiliza estratégia de herança JOINED para mapear as subclasses em tabelas separadas.
+ * Classe base abstrata para todos os usuários do sistema (Paciente, Médico, Admin).
+ * Implementa UserDetails para o Spring Security.
  */
 @Getter
 @Setter
@@ -31,7 +30,7 @@ import java.util.Set;
         @UniqueConstraint(columnNames = "email", name = "uk_usuario_email"),
         @UniqueConstraint(columnNames = "cpf", name = "uk_usuario_cpf")
 })
-@Inheritance(strategy = InheritanceType.JOINED) // Herança JOINED: cria tabelas separadas para subclasses.
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
 
     @NotBlank(message = "Nome é obrigatório")
@@ -47,7 +46,7 @@ public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
 
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
-    @Column(nullable = false, length = 255) // Armazena o hash da senha
+    @Column(nullable = false, length = 255)
     private String senha;
 
     @NotBlank(message = "CPF é obrigatório")
@@ -68,9 +67,6 @@ public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
 
-    /**
-     * Perfis (roles) do usuário.
-     */
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "tb_usuario_perfil",
@@ -79,7 +75,7 @@ public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
     )
     private Set<Perfil> perfis = new HashSet<>();
 
-    // Implementação de UserDetails
+    // Implementação de métodos do UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.perfis;
@@ -97,17 +93,17 @@ public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Ajuste conforme regras de negócio
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Ajuste conforme regras de negócio
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Ajuste conforme regras de negócio
+        return true;
     }
 
     @Override
@@ -116,10 +112,11 @@ public abstract class Usuario extends EntidadeAuditavel implements UserDetails {
     }
 
     // Construtor personalizado (opcional)
-    public Usuario(String nome, String email, String senha, String cpf, LocalDate dataNascimento, String telefone, Endereco endereco) {
+    public Usuario(String nome, String email, String senha, String cpf,
+                   LocalDate dataNascimento, String telefone, Endereco endereco) {
         this.nome = nome;
         this.email = email;
-        this.senha = senha; // Lembre-se de codificar a senha antes de salvar!
+        this.senha = senha;
         this.cpf = cpf;
         this.dataNascimento = dataNascimento;
         this.telefone = telefone;

@@ -3,17 +3,19 @@ package br.com.ifpe.medplus_api.config;
 
 import br.com.ifpe.medplus_api.model.acesso.PerfilEnum;
 import br.com.ifpe.medplus_api.security.JwtAuthenticationFilter; // Certifique-se que este filtro está implementado
+//import io.swagger.v3.oas.models.PathItem.HttpMethod;
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -32,9 +34,9 @@ public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider; // Injetado do ApplicationConfiguration
 
-    private static final String[] PUBLIC_URLS = {
+    private static final String[] PUBLIC_URLS= {
         "/auth/**",
-        "/pacientes/registrar",
+        "/paciente/registrar",
         "/auth/registrar/paciente"
     };
 
@@ -44,7 +46,12 @@ public class SecurityConfiguration {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers(PUBLIC_URLS).permitAll()
+
+             // Endpoints públicos
+                .requestMatchers(HttpMethod.POST, "/pacientes").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                
+                //.requestMatchers(PUBLIC_URLS).permitAll()
                 .requestMatchers("/admin/**").hasRole(PerfilEnum.ROLE_ADMIN.getNome()) // Verifique se getNome() retorna "ADMIN"
                 .requestMatchers("/medicos/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_MEDICO.getNome(), PerfilEnum.ROLE_ADMIN.getNome())
                 .requestMatchers("/pacientes/meu-perfil/**").hasAnyRole(PerfilEnum.ROLE_PACIENTE.getNome(), PerfilEnum.ROLE_ADMIN.getNome())

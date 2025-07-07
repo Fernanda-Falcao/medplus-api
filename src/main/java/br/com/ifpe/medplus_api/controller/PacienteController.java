@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityExistsException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -42,17 +43,32 @@ public class PacienteController {
     private final ConsultaService consultaService;
     private final AuthService authService;
 
-    
-    public PacienteController(PacienteService pacienteService, ConsultaService consultaService, AuthService authService) {
+    public PacienteController(PacienteService pacienteService, ConsultaService consultaService,
+            AuthService authService) {
         this.pacienteService = pacienteService;
         this.consultaService = consultaService;
         this.authService = authService;
     }
 
+    @PostMapping
+    @PreAuthorize("permitAll()") // <-- aqui libera acesso público
+    public ResponseEntity<?> cadastrarPaciente(@Valid @RequestBody PacienteRequest pacienteRequest) {
+        try {
+            Paciente paciente = pacienteService.cadastrarPaciente(pacienteRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(PacienteResponse.fromPaciente(paciente));
+        } catch (EntityExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Erro ao cadastrar paciente: " + e.getMessage()));
+        }
+    }
+
     /**
      * DTO para resposta de Paciente (sem a senha).
      */
-    private record PacienteResponse(Long id, String nome, String email, String cpf, String telefone, String historicoMedico) {
+    private record PacienteResponse(Long id, String nome, String email, String cpf, String telefone,
+            String historicoMedico) {
         static PacienteResponse fromPaciente(Paciente paciente) {
             return new PacienteResponse(
                     paciente.getId(),
@@ -60,27 +76,25 @@ public class PacienteController {
                     paciente.getEmail(),
                     paciente.getCpf(),
                     paciente.getTelefone(),
-                    paciente.getHistoricoMedico()
-            );
-        }
-    }
-    
-    /**
-     * DTO para resposta simplificada de Consulta.
-     */
-    private record ConsultaResponse(Long id, String medicoNome, String especialidadeMedico, String dataHora, String status, String observacoes) {
-        static ConsultaResponse fromConsulta(Consulta consulta) {
-            return new ConsultaResponse(
-                consulta.getId(),
-                consulta.getMedico() != null ? consulta.getMedico().getNome() : "N/A",
-                consulta.getMedico() != null ? consulta.getMedico().getEspecialidade() : "N/A",
-                consulta.getDataHoraConsulta() != null ? consulta.getDataHoraConsulta().toString() : "N/A",
-                consulta.getStatus() != null ? consulta.getStatus().getDescricao() : "N/A",
-                consulta.getObservacoes()
-            );
+                    paciente.getHistoricoMedico());
         }
     }
 
+    /**
+     * DTO para resposta simplificada de Consulta.
+     */
+    private record ConsultaResponse(Long id, String medicoNome, String especialidadeMedico, String dataHora,
+            String status, String observacoes) {
+        static ConsultaResponse fromConsulta(Consulta consulta) {
+            return new ConsultaResponse(
+                    consulta.getId(),
+                    consulta.getMedico() != null ? consulta.getMedico().getNome() : "N/A",
+                    consulta.getMedico() != null ? consulta.getMedico().getEspecialidade() : "N/A",
+                    consulta.getDataHoraConsulta() != null ? consulta.getDataHoraConsulta().toString() : "N/A",
+                    consulta.getStatus() != null ? consulta.getStatus().getDescricao() : "N/A",
+                    consulta.getObservacoes());
+        }
+    }
 
     @Operation(summary = "Obter perfil do paciente logado", description = "Retorna os dados do perfil do paciente autenticado.")
     @ApiResponses(value = {
@@ -110,7 +124,8 @@ public class PacienteController {
     })
     @PutMapping("/meu-perfil")
     @PreAuthorize("hasRole('PACIENTE')")
-    public ResponseEntity<?> atualizarMeuPerfil(@Valid @RequestBody PacienteRequest pacienteRequest, Authentication authentication) {
+    public ResponseEntity<?> atualizarMeuPerfil(@Valid @RequestBody PacienteRequest pacienteRequest,
+            Authentication authentication) {
         try {
             String email = authentication.getName();
             Paciente pacienteLogado = pacienteService.buscarPorEmail(email);
@@ -130,9 +145,11 @@ public class PacienteController {
     })
     @PostMapping("/meu-perfil/mudar-senha")
     @PreAuthorize("hasRole('PACIENTE')")
-    public ResponseEntity<?> mudarMinhaSenha(@Valid @RequestBody SenhaUpdateRequest senhaUpdateRequest, Authentication authentication) {
+    public ResponseEntity<?> mudarMinhaSenha(@Valid @RequestBody SenhaUpdateRequest senhaUpdateRequest,
+            Authentication authentication) {
         try {
-            authService.mudarSenha(authentication.getName(), senhaUpdateRequest.getSenhaAntiga(), senhaUpdateRequest.getNovaSenha());
+            authService.mudarSenha(authentication.getName(), senhaUpdateRequest.getSenhaAntiga(),
+                    senhaUpdateRequest.getNovaSenha());
             return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso."));
         } catch (RuntimeException e) { // Captura BadCredentialsException ou outras do AuthService
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
@@ -173,7 +190,8 @@ public class PacienteController {
             String email = authentication.getName();
             Paciente paciente = pacienteService.buscarPorEmail(email);
             List<Consulta> consultas = consultaService.listarConsultasPorPaciente(paciente.getId());
-            List<ConsultaResponse> response = consultas.stream().map(ConsultaResponse::fromConsulta).collect(Collectors.toList());
+            List<ConsultaResponse> response = consultas.stream().map(ConsultaResponse::fromConsulta)
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(response);
         } catch (UsernameNotFoundException | EntidadeNaoEncontradaException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Paciente não encontrado."));
@@ -191,18 +209,23 @@ public class PacienteController {
     @PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<?> agendarConsulta(
             @Parameter(description = "ID do médico para a consulta", required = true) @RequestParam Long medicoId,
-            @Parameter(description = "Data e hora da consulta (formato ISO: yyyy-MM-ddTHH:mm:ss)", required = true) @RequestParam String dataHoraConsulta, // Receber como String e parsear
+            @Parameter(description = "Data e hora da consulta (formato ISO: yyyy-MM-ddTHH:mm:ss)", required = true) @RequestParam String dataHoraConsulta, // Receber
+                                                                                                                                                           // como
+                                                                                                                                                           // String
+                                                                                                                                                           // e
+                                                                                                                                                           // parsear
             @Parameter(description = "Observações para a consulta") @RequestParam(required = false) String observacoes,
             Authentication authentication) {
         try {
             String emailPaciente = authentication.getName();
             Paciente paciente = pacienteService.buscarPorEmail(emailPaciente);
-            
+
             java.time.LocalDateTime dataHora;
             try {
                 dataHora = java.time.LocalDateTime.parse(dataHoraConsulta);
             } catch (java.time.format.DateTimeParseException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Formato de dataHoraConsulta inválido. Use yyyy-MM-ddTHH:mm:ss"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Formato de dataHoraConsulta inválido. Use yyyy-MM-ddTHH:mm:ss"));
             }
 
             Consulta novaConsulta = consultaService.agendarConsulta(paciente.getId(), medicoId, dataHora, observacoes);
@@ -234,10 +257,12 @@ public class PacienteController {
             Consulta consulta = consultaService.buscarPorId(consultaId);
 
             if (!consulta.getPaciente().getId().equals(paciente.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Você não tem permissão para cancelar esta consulta."));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Você não tem permissão para cancelar esta consulta."));
             }
 
-            Consulta consultaCancelada = consultaService.cancelarConsulta(consultaId, motivo, br.com.ifpe.medplus_api.model.acesso.PerfilEnum.ROLE_PACIENTE);
+            Consulta consultaCancelada = consultaService.cancelarConsulta(consultaId, motivo,
+                    br.com.ifpe.medplus_api.model.acesso.PerfilEnum.ROLE_PACIENTE);
             return ResponseEntity.ok(ConsultaResponse.fromConsulta(consultaCancelada));
         } catch (UsernameNotFoundException | EntidadeNaoEncontradaException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
@@ -245,27 +270,30 @@ public class PacienteController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
-    
-    // Endpoints para listar médicos disponíveis por especialidade (útil para o paciente agendar)
+
+    // Endpoints para listar médicos disponíveis por especialidade (útil para o
+    // paciente agendar)
     // Este endpoint pode ser público ou requerer autenticação de paciente.
     // Vamos assumir que requer autenticação de paciente para este exemplo.
     @Operation(summary = "Listar médicos por especialidade", description = "Retorna médicos ativos de uma determinada especialidade.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Médicos encontrados"),
-        @ApiResponse(responseCode = "401", description = "Não Autorizado")
+            @ApiResponse(responseCode = "200", description = "Médicos encontrados"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado")
     })
     @GetMapping("/medicos/especialidade/{especialidade}")
     @PreAuthorize("isAuthenticated()") // Ou hasRole('PACIENTE') se for exclusivo para pacientes
     public ResponseEntity<?> listarMedicosPorEspecialidade(@PathVariable String especialidade) {
-        // Usar MedicoService para buscar. Criar um MedicoResponseDTO para não expor dados sensíveis.
+        // Usar MedicoService para buscar. Criar um MedicoResponseDTO para não expor
+        // dados sensíveis.
         // Exemplo:
-        // List<Medico> medicos = medicoService.listarAtivosPorEspecialidade(especialidade);
-        // List<MedicoResponseDTO> response = medicos.stream().map(MedicoResponseDTO::fromMedico).collect(Collectors.toList());
+        // List<Medico> medicos =
+        // medicoService.listarAtivosPorEspecialidade(especialidade);
+        // List<MedicoResponseDTO> response =
+        // medicos.stream().map(MedicoResponseDTO::fromMedico).collect(Collectors.toList());
         // return ResponseEntity.ok(response);
-        return ResponseEntity.ok(Map.of("message", "Endpoint para listar médicos por especialidade: " + especialidade + " - Implementar com MedicoService e DTO de resposta."));
+        return ResponseEntity.ok(Map.of("message", "Endpoint para listar médicos por especialidade: " + especialidade
+                + " - Implementar com MedicoService e DTO de resposta."));
     }
-
 
     // O DTO SenhaUpdateRequest precisa ser criado.
 }
-
