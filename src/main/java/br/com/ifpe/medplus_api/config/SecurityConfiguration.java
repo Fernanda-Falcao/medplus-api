@@ -53,6 +53,8 @@ public class SecurityConfiguration {
                 .requestMatchers("/auth/**").permitAll()
 
                 .requestMatchers(HttpMethod.POST, "/medicos/registrar").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/medicos/meu-perfil").hasRole("MEDICO")
+
 
                                     //.hasAnyAuthority(PerfilEnum.ROLE_MEDICO.name()
         
