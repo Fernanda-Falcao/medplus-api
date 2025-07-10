@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 @Tag(name = "Administração", description = "Endpoints para gerenciamento do sistema por administradores")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADMIN')")
+// @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
@@ -54,10 +54,10 @@ public class AdminController {
     private final AuthService authService;
 
     public AdminController(AdminService adminService,
-                           PacienteService pacienteService,
-                           MedicoService medicoService,
-                           ConsultaService consultaService,
-                           AuthService authService) {
+            PacienteService pacienteService,
+            MedicoService medicoService,
+            ConsultaService consultaService,
+            AuthService authService) {
         this.adminService = adminService;
         this.pacienteService = pacienteService;
         this.medicoService = medicoService;
@@ -67,9 +67,11 @@ public class AdminController {
 
     // --- DTOs de Resposta (corrigidos para serem mais robustos) ---
 
-    private record AdminResponse(Long id, String nome, String email, String cpf, Integer nivelAcesso, boolean ativo, List<String> roles) {
+    private record AdminResponse(Long id, String nome, String email, String cpf, Integer nivelAcesso, boolean ativo,
+            List<String> roles) {
         static AdminResponse fromAdmin(Admin admin) {
-            if (admin == null) return null;
+            if (admin == null)
+                return null;
             List<String> roles = Collections.emptyList();
             // CORREÇÃO: Acessar .getPerfis() diretamente do objeto admin.
             if (admin.getPerfis() != null) {
@@ -78,15 +80,16 @@ public class AdminController {
                         .collect(Collectors.toList());
             }
             return new AdminResponse(
-                admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(),
-                admin.getNivelAcesso(), admin.isAtivo(), roles
-            );
+                    admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(),
+                    admin.getNivelAcesso(), admin.isAtivo(), roles);
         }
     }
 
-    private record PacienteAdminResponse(Long id, String nome, String email, String cpf, boolean ativo, List<String> roles) {
+    private record PacienteAdminResponse(Long id, String nome, String email, String cpf, boolean ativo,
+            List<String> roles) {
         static PacienteAdminResponse fromPaciente(Paciente paciente) {
-            if (paciente == null) return null;
+            if (paciente == null)
+                return null;
             List<String> roles = Collections.emptyList();
             // CORREÇÃO: Acessar .getPerfis() diretamente do objeto paciente.
             if (paciente.getPerfis() != null) {
@@ -95,15 +98,16 @@ public class AdminController {
                         .collect(Collectors.toList());
             }
             return new PacienteAdminResponse(
-                paciente.getId(), paciente.getNome(), paciente.getEmail(), paciente.getCpf(),
-                paciente.isAtivo(), roles
-            );
+                    paciente.getId(), paciente.getNome(), paciente.getEmail(), paciente.getCpf(),
+                    paciente.isAtivo(), roles);
         }
     }
 
-    private record MedicoAdminResponse(Long id, String nome, String email, String crm, String especialidade, boolean ativo, List<String> roles) {
+    private record MedicoAdminResponse(Long id, String nome, String email, String crm, String especialidade,
+            boolean ativo, List<String> roles) {
         static MedicoAdminResponse fromMedico(Medico medico) {
-            if (medico == null) return null;
+            if (medico == null)
+                return null;
             List<String> roles = Collections.emptyList();
             // CORREÇÃO: Acessar .getPerfis() diretamente do objeto medico.
             if (medico.getPerfis() != null) {
@@ -112,28 +116,28 @@ public class AdminController {
                         .collect(Collectors.toList());
             }
             return new MedicoAdminResponse(
-                medico.getId(), medico.getNome(), medico.getEmail(), medico.getCrm(),
-                medico.getEspecialidade(), medico.isAtivo(), roles
-            );
+                    medico.getId(), medico.getNome(), medico.getEmail(), medico.getCrm(),
+                    medico.getEspecialidade(), medico.isAtivo(), roles);
         }
     }
 
     // --- DTO de Resposta para Consultas ---
-    private record ConsultaAdminResponse(Long id, String pacienteNome, String medicoNome, String dataHora, String status) {
+    private record ConsultaAdminResponse(Long id, String pacienteNome, String medicoNome, String dataHora,
+            String status) {
         static ConsultaAdminResponse fromConsulta(Consulta consulta) {
-            if (consulta == null) return null; // Proteção contra entidade nula
+            if (consulta == null)
+                return null; // Proteção contra entidade nula
             return new ConsultaAdminResponse(
-                consulta.getId(),
-                consulta.getPaciente() != null ? consulta.getPaciente().getNome() : "N/A",
-                consulta.getMedico() != null ? consulta.getMedico().getNome() : "N/A",
-                consulta.getDataHoraConsulta() != null ? consulta.getDataHoraConsulta().toString() : "N/A",
-                consulta.getStatus() != null ? consulta.getStatus().getDescricao() : "N/A"
-            );
+                    consulta.getId(),
+                    consulta.getPaciente() != null ? consulta.getPaciente().getNome() : "N/A",
+                    consulta.getMedico() != null ? consulta.getMedico().getNome() : "N/A",
+                    consulta.getDataHoraConsulta() != null ? consulta.getDataHoraConsulta().toString() : "N/A",
+                    consulta.getStatus() != null ? consulta.getStatus().getDescricao() : "N/A");
         }
     }
 
-
     // --- Gerenciamento do Próprio Perfil Admin ---
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/meu-perfil")
     public ResponseEntity<AdminResponse> getMeuPerfilAdmin(Authentication authentication) {
         Admin admin = adminService.buscarPorEmail(authentication.getName());
@@ -141,15 +145,18 @@ public class AdminController {
     }
 
     @PutMapping("/meu-perfil")
-    public ResponseEntity<AdminResponse> atualizarMeuPerfilAdmin(@Valid @RequestBody AdminRequest adminRequest, Authentication authentication) {
+    public ResponseEntity<AdminResponse> atualizarMeuPerfilAdmin(@Valid @RequestBody AdminRequest adminRequest,
+            Authentication authentication) {
         Admin adminLogado = adminService.buscarPorEmail(authentication.getName());
         Admin adminAtualizado = adminService.atualizarAdmin(adminLogado.getId(), adminRequest);
         return ResponseEntity.ok(AdminResponse.fromAdmin(adminAtualizado));
     }
 
     @PostMapping("/meu-perfil/mudar-senha")
-    public ResponseEntity<Map<String, String>> mudarMinhaSenhaAdmin(@Valid @RequestBody SenhaUpdateRequest senhaUpdateRequest, Authentication authentication) {
-        authService.mudarSenha(authentication.getName(), senhaUpdateRequest.getSenhaAntiga(), senhaUpdateRequest.getNovaSenha());
+    public ResponseEntity<Map<String, String>> mudarMinhaSenhaAdmin(
+            @Valid @RequestBody SenhaUpdateRequest senhaUpdateRequest, Authentication authentication) {
+        authService.mudarSenha(authentication.getName(), senhaUpdateRequest.getSenhaAntiga(),
+                senhaUpdateRequest.getNovaSenha());
         return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso."));
     }
 
@@ -161,7 +168,7 @@ public class AdminController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(admins);
     }
-    
+
     // ... outros endpoints de admin ...
 
     // --- Gerenciamento de Pacientes pelo Admin ---
@@ -172,21 +179,22 @@ public class AdminController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(pacientes);
     }
-    
+
     @GetMapping("/usuarios/pacientes/{pacienteId}")
     public ResponseEntity<PacienteAdminResponse> buscarPacientePorId(@PathVariable Long pacienteId) {
         Paciente paciente = pacienteService.buscarPorId(pacienteId);
         return ResponseEntity.ok(PacienteAdminResponse.fromPaciente(paciente));
     }
-    
+
     @PostMapping("/usuarios/pacientes")
     public ResponseEntity<PacienteAdminResponse> criarPaciente(@Valid @RequestBody PacienteRequest pacienteRequest) {
         Paciente novoPaciente = pacienteService.cadastrarPaciente(pacienteRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(PacienteAdminResponse.fromPaciente(novoPaciente));
     }
-    
+
     @PutMapping("/usuarios/pacientes/{pacienteId}")
-    public ResponseEntity<PacienteAdminResponse> atualizarPaciente(@PathVariable Long pacienteId, @Valid @RequestBody PacienteRequest pacienteRequest) {
+    public ResponseEntity<PacienteAdminResponse> atualizarPaciente(@PathVariable Long pacienteId,
+            @Valid @RequestBody PacienteRequest pacienteRequest) {
         Paciente pacienteAtualizado = pacienteService.atualizarPaciente(pacienteId, pacienteRequest);
         return ResponseEntity.ok(PacienteAdminResponse.fromPaciente(pacienteAtualizado));
     }
@@ -199,13 +207,13 @@ public class AdminController {
 
     @PatchMapping("/usuarios/pacientes/{pacienteId}/ativar")
     public ResponseEntity<Map<String, String>> ativarPaciente(@PathVariable Long pacienteId) {
-        // CORREÇÃO: A lógica de ativação deve estar no service para garantir a persistência.
+        // CORREÇÃO: A lógica de ativação deve estar no service para garantir a
+        // persistência.
         // Vamos supor que o PacienteService agora tem um método ativarPaciente.
         pacienteService.ativarPaciente(pacienteId); // O service deve buscar, setar ativo=true e salvar.
         return ResponseEntity.ok(Map.of("message", "Paciente ID " + pacienteId + " ativado."));
     }
 
-
     // --- Gerenciamento de Médicos pelo Admin ---
     @Operation(summary = "Listar todos os médicos")
     @GetMapping("/usuarios/medicos")
@@ -216,19 +224,18 @@ public class AdminController {
         return ResponseEntity.ok(medicos);
     }
 
-
     // --- Gerenciamento de Médicos pelo Admin ---
-    /* 
-    @Operation(summary = "Listar todos os médicos")
-    @GetMapping("/usuarios/medicos")
-    public ResponseEntity<List<MedicoAdminResponse>> listarMedicos() {
-        List<MedicoAdminResponse> medicos = medicoService.listarTodos().stream()
-                .map(MedicoAdminResponse::fromMedico)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(medicos);
-    }
-    */
-
+    /*
+     * @Operation(summary = "Listar todos os médicos")
+     * 
+     * @GetMapping("/usuarios/medicos")
+     * public ResponseEntity<List<MedicoAdminResponse>> listarMedicos() {
+     * List<MedicoAdminResponse> medicos = medicoService.listarTodos().stream()
+     * .map(MedicoAdminResponse::fromMedico)
+     * .collect(Collectors.toList());
+     * return ResponseEntity.ok(medicos);
+     * }
+     */
 
     @Operation(summary = "Buscar médico por ID")
     @GetMapping("/usuarios/medicos/{medicoId}")
@@ -246,7 +253,8 @@ public class AdminController {
 
     @Operation(summary = "Atualizar dados de um médico (admin)")
     @PutMapping("/usuarios/medicos/{medicoId}")
-    public ResponseEntity<?> atualizarMedico(@PathVariable Long medicoId, @Valid @RequestBody MedicoRequest medicoRequest) {
+    public ResponseEntity<?> atualizarMedico(@PathVariable Long medicoId,
+            @Valid @RequestBody MedicoRequest medicoRequest) {
         Medico medicoAtualizado = medicoService.atualizarMedico(medicoId, medicoRequest);
         return ResponseEntity.ok(MedicoAdminResponse.fromMedico(medicoAtualizado));
     }
@@ -294,9 +302,10 @@ public class AdminController {
             Consulta novaConsulta = consultaService.agendarConsulta(pacienteId, medicoId, dataHora, observacoes);
             return ResponseEntity.status(HttpStatus.CREATED).body(ConsultaAdminResponse.fromConsulta(novaConsulta));
         } catch (DateTimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Formato de dataHoraConsulta inválido. Use YYYY-MM-DDTHH:MM:SS"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Formato de dataHoraConsulta inválido. Use YYYY-MM-DDTHH:MM:SS"));
         } catch (IllegalArgumentException | EntidadeNaoEncontradaException e) {
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -307,7 +316,7 @@ public class AdminController {
             Consulta consultaCancelada = consultaService.cancelarConsulta(consultaId, motivo, PerfilEnum.ROLE_ADMIN);
             return ResponseEntity.ok(ConsultaAdminResponse.fromConsulta(consultaCancelada));
         } catch (IllegalArgumentException | EntidadeNaoEncontradaException e) {
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -322,12 +331,13 @@ public class AdminController {
             Consulta consultaReagendada = consultaService.reagendarConsulta(consultaId, dataHora, observacoes);
             return ResponseEntity.ok(ConsultaAdminResponse.fromConsulta(consultaReagendada));
         } catch (DateTimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Formato de novaDataHora inválido. Use YYYY-MM-DDTHH:MM:SS"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Formato de novaDataHora inválido. Use YYYY-MM-DDTHH:MM:SS"));
         } catch (IllegalArgumentException | EntidadeNaoEncontradaException e) {
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @Operation(summary = "Atualizar status de uma consulta (admin)")
     @PatchMapping("/consultas/{consultaId}/status")
     public ResponseEntity<?> atualizarStatusConsultaAdmin(
@@ -338,14 +348,21 @@ public class AdminController {
             Consulta consultaAtualizada = consultaService.atualizarStatusConsulta(consultaId, status);
             return ResponseEntity.ok(ConsultaAdminResponse.fromConsulta(consultaAtualizada));
         } catch (IllegalArgumentException e) { // Captura erro do valueOf do Enum também
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Status inválido: " + novoStatus + ". Erro: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Status inválido: " + novoStatus + ". Erro: " + e.getMessage()));
         } catch (EntidadeNaoEncontradaException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @Operation(summary = "Registrar novo admin (uso único)")
+    @PostMapping("/registrar-admin")
+    @PreAuthorize("permitAll()") // Permite acesso público só a este endpoint
+    public ResponseEntity<?> registrarAdmin(@Valid @RequestBody AdminRequest adminRequest) {
+        Admin novoAdmin = adminService.cadastrarAdmin(adminRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Admin criado com sucesso: " + novoAdmin.getEmail());
+    }
+
 }
 
-
 // Fim do Controller AdminController
-
-

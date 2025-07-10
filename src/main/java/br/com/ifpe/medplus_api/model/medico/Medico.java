@@ -24,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "tb_medico")
-@PrimaryKeyJoinColumn(name = "usuario_id") // Chave primária é a mesma da tabela pai (tb_usuario)
+@PrimaryKeyJoinColumn(name = "usuario_id")
 public class Medico extends Usuario {
 
     @NotBlank(message = "CRM é obrigatório")
@@ -37,22 +37,18 @@ public class Medico extends Usuario {
     @Column(name = "especialidade", nullable = false, length = 100)
     private String especialidade;
 
-    // Relacionamento com Consultas (um médico pode ter várias consultas)
     @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Consulta> consultasAgendadas = new ArrayList<>();
 
-    // Relacionamento com Disponibilidade (um médico pode ter vários horários de disponibilidade)
     @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DisponibilidadeMedico> disponibilidades = new ArrayList<>();
 
-    // Construtor
     public Medico(String nome, String email, String senha, String cpf, LocalDate dataNascimento, String telefone, Endereco endereco, String crm, String especialidade) {
         super(nome, email, senha, cpf, dataNascimento, telefone, endereco);
         this.crm = crm;
         this.especialidade = especialidade;
     }
 
-    // Métodos utilitários
     public void adicionarConsulta(Consulta consulta) {
         consultasAgendadas.add(consulta);
         consulta.setMedico(this);
@@ -83,8 +79,5 @@ public class Medico extends Usuario {
                 ", especialidade='" + especialidade + '\'' +
                 '}';
     }
-
-    public Usuario getUsuario() {
-        throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
-    }
 }
+

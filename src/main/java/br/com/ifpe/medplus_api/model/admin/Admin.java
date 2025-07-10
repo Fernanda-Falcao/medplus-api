@@ -21,14 +21,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "tb_admin")
-@PrimaryKeyJoinColumn(name = "usuario_id") // Chave primária é a mesma da tabela pai (tb_usuario)
+@PrimaryKeyJoinColumn(name = "usuario_id")
 public class Admin extends Usuario {
 
-    // Exemplo de campo específico para Admin
     @Column(name = "nivel_acesso")
-    private Integer nivelAcesso; // Ex: 1 para admin master, 2 para admin regional, etc.
+    private Integer nivelAcesso;
 
-    // Construtor
     public Admin(String nome, String email, String senha, String cpf, LocalDate dataNascimento, String telefone, Endereco endereco, Integer nivelAcesso) {
         super(nome, email, senha, cpf, dataNascimento, telefone, endereco);
         this.nivelAcesso = nivelAcesso;
@@ -42,9 +40,5 @@ public class Admin extends Usuario {
                 ", email='" + getEmail() + '\'' +
                 ", nivelAcesso=" + nivelAcesso +
                 '}';
-    }
-
-    public Usuario getUsuario() {
-        throw new UnsupportedOperationException("Unimplemented method 'getUsuario'");
     }
 }

@@ -62,8 +62,12 @@ public class PacienteRequest {
     }
 
     public CharSequence getSenha() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getSenha'");
+            return this.password;
     }
+
+    // public CharSequence getSenha() {
+    //     // TODO Auto-generated method stub
+    //     throw new UnsupportedOperationException("Unimplemented method 'getSenha'");
+    // }
 }
 

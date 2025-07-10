@@ -216,19 +216,17 @@ public class MedicoController {
         @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> cadastrarMedico(@Valid @RequestBody MedicoRequest medicoRequest) {
-        try {
-            Medico novoMedico = medicoService.registrarMedico(medicoRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(MedicoResponse.fromMedico(novoMedico));
-        } catch (EntityExistsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (EntidadeNaoEncontradaException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+    @PostMapping("/registrar")
+public ResponseEntity<?> cadastrarMedico(@Valid @RequestBody MedicoRequest medicoRequest) {
+    try {
+        Medico novoMedico = medicoService.registrarMedico(medicoRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(MedicoResponse.fromMedico(novoMedico));
+    } catch (EntityExistsException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    } catch (EntidadeNaoEncontradaException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
     }
-
+}
     @Operation(summary = "Excluir (desativar) conta do médico logado", description = "Permite que o médico autenticado desative sua própria conta.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Conta desativada com sucesso"),

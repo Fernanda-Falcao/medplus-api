@@ -53,7 +53,7 @@ public class AdminService {
      * @throws EntidadeNaoEncontradaException Se o perfil de administrador não for encontrado.
      */
     @Transactional
-    public Admin registrarAdmin(AdminRequest request) {
+    public Admin cadastrarAdmin(AdminRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new EntityExistsException("Email já cadastrado no sistema: " + request.getEmail());
         }
